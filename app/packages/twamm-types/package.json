@@ -1,0 +1,33 @@
+{
+  "name": "@twamm/types",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "description": "> Twamm Program Client Typedefs",
+  "homepage": "https://github.com/askibin/twamm#readme",
+  "license": "MIT",
+  "main": "lib/index.ts",
+  "types": "@types/twamm-types.d.ts",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/askibin/twamm.git"
+  },
+  "scripts": {
+    "test": "npx ts-node ./__tests__/twamm-types.test.ts"
+  },
+  "bugs": {
+    "url": "https://github.com/askibin/twamm/issues"
+  },
+  "gitHead": "2557c6304565c052ff242fc7efeb541c6d858293",
+  "dependencies": {
+    "bn.js": "5.2.1"
+  }
+}

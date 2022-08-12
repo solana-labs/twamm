@@ -1,0 +1,34 @@
+.coins {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  position: relative;
+}
+
+.noCoinItem {
+  cursor: pointer;
+  display: block;
+  padding: 0 16px;
+  position: absolute;
+}
+
+.coinItem {
+  cursor: pointer;
+  padding: 0 16px;
+}
+.coinItem:hover,
+.coinItem:active,
+.coinItem:focus {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.coinItem:hover .coinItemTextPrimary,
+.coinItem:active .coinItemTextPrimary,
+.coinItem:focus .coinItemTextPrimary {
+  color: var(--mui-palette-text-primary);
+}
+
+.coinItem:hover .coinItemTextSecondary,
+.coinItem:active .coinItemTextSecondary,
+.coinItem:focus .coinItemTextSecondary {
+  color: var(--mui-palette-neutral-400);
+}

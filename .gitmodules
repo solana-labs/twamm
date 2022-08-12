@@ -1,0 +1,3 @@
+[submodule "material-kit-react"]
+	path = app/packages/material-kit-react
+	url = https://github.com/devias-io/material-kit-react.git

@@ -1,0 +1,43 @@
+inputs:
+  working_directory:
+    description: 'Working directory'
+    default: 'No `working_directory` provided'
+  suffix:
+    description: 'Cache key suffix'
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Setup `NODE_VERSION`
+      id: nvm
+      shell: bash
+      run: echo "::set-output name=NODE_VERSION::$(cat .nvmrc)"
+      working-directory: "${{ inputs.working_directory }}"
+
+    - uses: actions/setup-node@v1
+      with: { node-version: "${{ steps.nvm.outputs.NODE_VERSION }}" }
+
+    - uses: actions/cache@v3
+      id: node-modules-cache
+      with:
+        path: "${{ inputs.working_directory }}/node_modules"
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+    - name: Get Package Manager cache directory
+      id: yarn-cache-dir-path
+      shell: bash
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - uses: actions/cache@v3
+      id: yarn-cache
+      with:
+        path: "${{ steps.yarn-cache-dir-path.outputs.dir }}"
+        key: ${{ runner.os }}-yarn-${{ inputs.suffix }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-${{ inputs.suffix }}-
+
+    - name: Make install
+      shell: bash
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      run: yarn install
+      working-directory: "${{ inputs.working_directory }}"
