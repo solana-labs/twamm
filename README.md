@@ -85,6 +85,8 @@ anchor idl init --provider.cluster devnet --filepath ./target/idl/twamm.json <PR
 
 To initialize the program, you need to execute `init` instruction and then `initTokenPair` for each supported token pair. See `tests/1_basics.ts` for examples.
 
+### UI
+
 UI is built using NextJS, and its deployment is the same as for any similar app: [NextJS Deployment](https://nextjs.org/docs/deployment).
 
 To launch a local instance for development purposes, you can use yarn:
@@ -94,6 +96,46 @@ cd app
 yarn install
 yarn dev
 ```
+
+Note: UI won't work unless the program is properly deployed and initialized!
+
+### Vercel Deployment
+
+- Fork `twamm` repository into your Github account.
+- Login to Vercel.
+- Click `Create a New Project`.
+- Click `Import` next to twamm.
+- Click `Edit` for `Root Directory` and choose `app`.
+- Choose `Next.js` for `Framework Preset`.
+
+- Set `Environment Variables`:
+
+      NEXT_PUBLIC_PROGRAM_ADDRESS - address of the deployed twamm program
+      NEXT_PUBLIC_CLUSTER_API_URL - link to your RPC node (api.mainnet-beta.com won't work due to restrictions)
+      NEXT_PUBLIC_ENABLE_TX_SIMUL - set to 0
+      NEXT_PUBLIC_SUPPORTED_TOKEN - insert a comma-separated list of supported token mints (don't add any spaces!)
+
+For example:
+
+    NEXT_PUBLIC_PROGRAM_ADDRESS: TWAMdUxafgDN2BJNFaC6pND63tjdLz4AmEKBzuxtbe9
+    NEXT_PUBLIC_CLUSTER_API_URL: https://rpc.ankr.com/solana
+    NEXT_PUBLIC_ENABLE_TX_SIMUL: 0
+    NEXT_PUBLIC_SUPPORTED_TOKEN: So11111111111111111111111111111111111111112,EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+
+Click `Deploy`.
+
+Make sure NodeJS version in `Settings`->`General` matches the one stored in `twamm/app/.nvmrc`.
+
+### Cranks
+
+In order for program to properly function, periodic permissionless "crank" transactions must be executed. An example crank script is located in `app/src/crank.ts` and can be executed as following:
+
+```
+export ANCHOR_WALLET=<ANY FUNDED WALLET>
+npx ts-node -P tsconfig.json app/src/crank.ts https://rpc.ankr.com/solana <TOKEN_MINT1> <TOKEN_MINT2>
+```
+
+Where `TOKEN_MINT1` and `TOKEN_MINT2` are corresponding mints of the token pair to crank.
 
 ## Support
 
