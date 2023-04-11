@@ -2,7 +2,9 @@ import type { Idl } from "@project-serum/anchor";
 
 import idlJson from "../idl.json";
 
-export const idl = idlJson as unknown as Idl;
+if (idlJson === null) throw new Error("IDL is invalid");
+
+export const idl = idlJson as Idl;
 
 export const JUPITER_CONFIG_URI = "https://quote-api.jup.ag";
 
