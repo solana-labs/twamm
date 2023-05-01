@@ -65,26 +65,22 @@ pub fn get_oracle_price(
     }
 }
 
-// Converts token amount to USD using oracle price
-pub fn get_asset_value_usd(
+// Converts token amount to USD with implied 6 decimals using oracle price
+pub fn get_asset_amount_usd(
     token_amount: u64,
     token_decimals: u8,
     oracle_price: &OraclePrice,
-) -> Result<f64> {
-    if token_amount == 0 {
-        return Ok(0.0);
+) -> Result<u64> {
+    if token_amount == 0 || oracle_price.price == 0 {
+        return Ok(0);
     }
-    let res = token_amount as f64
-        * oracle_price.price as f64
-        * math::checked_powi(
-            10.0,
-            math::checked_sub(oracle_price.exponent, token_decimals as i32)?,
-        )?;
-    if res.is_finite() {
-        Ok(res)
-    } else {
-        err!(TwammError::MathOverflow)
-    }
+    math::checked_decimal_mul(
+        token_amount,
+        -(token_decimals as i32),
+        oracle_price.price,
+        oracle_price.exponent,
+        -6i32,
+    )
 }
 
 pub fn get_test_price(

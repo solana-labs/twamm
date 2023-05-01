@@ -174,15 +174,15 @@ pub fn init_token_pair<'info>(
 
     token_pair.stats_a.pending_withdrawals = 0;
     token_pair.stats_a.fees_collected = 0;
-    token_pair.stats_a.order_volume_usd = 0.0;
-    token_pair.stats_a.routed_volume_usd = 0.0;
-    token_pair.stats_a.settled_volume_usd = 0.0;
+    token_pair.stats_a.order_volume_usd = 0;
+    token_pair.stats_a.routed_volume_usd = 0;
+    token_pair.stats_a.settled_volume_usd = 0;
 
     token_pair.stats_b.pending_withdrawals = 0;
     token_pair.stats_b.fees_collected = 0;
-    token_pair.stats_b.order_volume_usd = 0.0;
-    token_pair.stats_b.routed_volume_usd = 0.0;
-    token_pair.stats_b.settled_volume_usd = 0.0;
+    token_pair.stats_b.order_volume_usd = 0;
+    token_pair.stats_b.routed_volume_usd = 0;
+    token_pair.stats_b.settled_volume_usd = 0;
 
     token_pair
         .tifs
