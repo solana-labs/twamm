@@ -146,7 +146,7 @@ pub fn withdraw_fees<'info>(
     // transfer sol fees from the custody to the receiver
     if params.amount_sol > 0 {
         let balance = ctx.accounts.transfer_authority.try_lamports()?;
-        let min_balance = sysvar::rent::Rent::get().unwrap().minimum_balance(0);
+        let min_balance = sysvar::rent::Rent::get()?.minimum_balance(0);
         let available_balance = if balance > min_balance {
             math::checked_sub(balance, min_balance)?
         } else {

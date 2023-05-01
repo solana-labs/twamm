@@ -31,9 +31,9 @@ pub struct TokenConfig {
 pub struct TokenStats {
     pub pending_withdrawals: u64,
     pub fees_collected: u64,
-    pub order_volume_usd: f64,
-    pub routed_volume_usd: f64,
-    pub settled_volume_usd: f64,
+    pub order_volume_usd: u64,
+    pub routed_volume_usd: u64,
+    pub settled_volume_usd: u64,
 }
 
 #[derive(Copy, Clone, Default, Debug, Eq, PartialEq)]
@@ -427,43 +427,61 @@ impl TokenPair {
         let oracle_price_b = self.get_token_b_oracle_price(oracle_token_b)?;
         if settlement.settlement_side == MatchingSide::Sell {
             if settlement_type == SettlementType::Crank {
-                self.stats_a.routed_volume_usd += oracle::get_asset_value_usd(
-                    settlement.net_amount_settled,
-                    self.config_a.decimals,
-                    &oracle_price_a,
-                )?;
+                self.stats_a.routed_volume_usd =
+                    self.stats_a
+                        .routed_volume_usd
+                        .wrapping_add(oracle::get_asset_amount_usd(
+                            settlement.net_amount_settled,
+                            self.config_a.decimals,
+                            &oracle_price_a,
+                        )?);
             } else {
-                self.stats_a.settled_volume_usd += oracle::get_asset_value_usd(
-                    settlement.net_amount_settled,
-                    self.config_a.decimals,
-                    &oracle_price_a,
-                )?;
+                self.stats_a.settled_volume_usd =
+                    self.stats_a
+                        .settled_volume_usd
+                        .wrapping_add(oracle::get_asset_amount_usd(
+                            settlement.net_amount_settled,
+                            self.config_a.decimals,
+                            &oracle_price_a,
+                        )?);
             }
         } else if settlement.settlement_side == MatchingSide::Buy {
             if settlement_type == SettlementType::Crank {
-                self.stats_b.routed_volume_usd += oracle::get_asset_value_usd(
-                    settlement.net_amount_settled,
-                    self.config_b.decimals,
-                    &oracle_price_b,
-                )?;
+                self.stats_b.routed_volume_usd =
+                    self.stats_b
+                        .routed_volume_usd
+                        .wrapping_add(oracle::get_asset_amount_usd(
+                            settlement.net_amount_settled,
+                            self.config_b.decimals,
+                            &oracle_price_b,
+                        )?);
             } else {
-                self.stats_b.settled_volume_usd += oracle::get_asset_value_usd(
-                    settlement.net_amount_settled,
-                    self.config_b.decimals,
-                    &oracle_price_b,
-                )?;
+                self.stats_b.settled_volume_usd =
+                    self.stats_b
+                        .settled_volume_usd
+                        .wrapping_add(oracle::get_asset_amount_usd(
+                            settlement.net_amount_settled,
+                            self.config_b.decimals,
+                            &oracle_price_b,
+                        )?);
             }
         }
-        self.stats_a.order_volume_usd += oracle::get_asset_value_usd(
-            settlement.total_amount_settled_a,
-            self.config_a.decimals,
-            &oracle_price_a,
-        )?;
-        self.stats_b.order_volume_usd += oracle::get_asset_value_usd(
-            settlement.total_amount_settled_b,
-            self.config_b.decimals,
-            &oracle_price_b,
-        )?;
+        self.stats_a.order_volume_usd =
+            self.stats_a
+                .order_volume_usd
+                .wrapping_add(oracle::get_asset_amount_usd(
+                    settlement.total_amount_settled_a,
+                    self.config_a.decimals,
+                    &oracle_price_a,
+                )?);
+        self.stats_b.order_volume_usd =
+            self.stats_b
+                .order_volume_usd
+                .wrapping_add(oracle::get_asset_amount_usd(
+                    settlement.total_amount_settled_b,
+                    self.config_b.decimals,
+                    &oracle_price_b,
+                )?);
         Ok(())
     }
 
@@ -503,10 +521,10 @@ impl TokenPair {
                 .buy_side
                 .get_unsettled_amount(pool.expiration_time, current_time)?;
             if outstanding_sell > 0 || outstanding_buy > 0 {
-                total_outstanding_a += outstanding_sell;
-                total_outstanding_b += outstanding_buy;
-                outstanding_a[idx] += outstanding_sell;
-                outstanding_b[idx] += outstanding_buy;
+                total_outstanding_a = math::checked_add(total_outstanding_a, outstanding_sell)?;
+                total_outstanding_b = math::checked_add(total_outstanding_b, outstanding_buy)?;
+                outstanding_a[idx] = math::checked_add(outstanding_a[idx], outstanding_sell)?;
+                outstanding_b[idx] = math::checked_add(outstanding_b[idx], outstanding_buy)?;
 
                 let (settled_a, settled_b) = self.settle_sides(
                     &mut pool.sell_side,
@@ -515,8 +533,8 @@ impl TokenPair {
                     outstanding_buy,
                     oracle_price,
                 )?;
-                outstanding_a[idx] -= settled_a;
-                outstanding_b[idx] -= settled_b;
+                outstanding_a[idx] = math::checked_sub(outstanding_a[idx], settled_a)?;
+                outstanding_b[idx] = math::checked_sub(outstanding_b[idx], settled_b)?;
             }
         }
 
@@ -536,8 +554,9 @@ impl TokenPair {
                             outstanding_b[other_idx],
                             oracle_price,
                         )?;
-                        outstanding_a[idx] -= settled_a;
-                        outstanding_b[other_idx] -= settled_b;
+                        outstanding_a[idx] = math::checked_sub(outstanding_a[idx], settled_a)?;
+                        outstanding_b[other_idx] =
+                            math::checked_sub(outstanding_b[other_idx], settled_b)?;
                     }
                     if outstanding_b[idx] != 0 && outstanding_a[other_idx] != 0 {
                         let (settled_a, settled_b) = self.settle_sides(
@@ -547,8 +566,9 @@ impl TokenPair {
                             outstanding_b[idx],
                             oracle_price,
                         )?;
-                        outstanding_a[other_idx] -= settled_a;
-                        outstanding_b[idx] -= settled_b;
+                        outstanding_a[other_idx] =
+                            math::checked_sub(outstanding_a[other_idx], settled_a)?;
+                        outstanding_b[idx] = math::checked_sub(outstanding_b[idx], settled_b)?;
                     }
                 }
             }
@@ -621,7 +641,7 @@ impl TokenPair {
                     )?;
                     outstanding_a[idx] = math::checked_sub(outstanding_a[idx], settled)?;
                     settled_pools[idx].0 = true;
-                    settled_num += 1;
+                    settled_num = math::checked_add(settled_num, 1)?;
                 } else if outstanding_b[idx] != 0 {
                     (settled, received) = self.settle_side_with_supply(
                         &mut pool.buy_side,
@@ -632,7 +652,7 @@ impl TokenPair {
                     )?;
                     outstanding_b[idx] = math::checked_sub(outstanding_b[idx], settled)?;
                     settled_pools[idx].1 = true;
-                    settled_num += 1;
+                    settled_num = math::checked_add(settled_num, 1)?;
                 }
                 pool_amount_out = math::checked_sub(pool_amount_out, settled)?;
                 supply_amount_in = math::checked_sub(supply_amount_in, received)?;
