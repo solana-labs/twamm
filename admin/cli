@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+ts-node-esm "./src/cli.mts" "$@"
