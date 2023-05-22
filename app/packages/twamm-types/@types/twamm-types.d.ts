@@ -1,8 +1,7 @@
 declare type OrderTypeStruct = { sell: {} } & { buy: {} };
 
-declare type PoolStatusStruct = { expired: {} } & { inactive: {} } & {
-  active: {};
-};
+declare type PoolStatusStruct = { expired: {} } & { inactive: {} }
+  & { active: {} } & { locked: {} };
 
 declare type TIF = number;
 
@@ -67,10 +66,10 @@ declare module "@twamm/types" {
 
   export type TokenPairStats = {
     feesCollected: BN;
-    orderVolumeUsd: number;
+    orderVolumeUsd: BN;
     pendingWithdrawals: BN;
-    routedVolumeUsd: number;
-    settledVolumeUsd: number;
+    routedVolumeUsd: BN;
+    settledVolumeUsd: BN;
   };
 
   export type TokenPair = {

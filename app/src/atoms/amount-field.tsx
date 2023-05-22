@@ -53,11 +53,11 @@ export default ({
       />
       <Styled.SecondaryControls direction="row" spacing={1}>
         <Styled.TokenAmountInUSD>{displayAmount}</Styled.TokenAmountInUSD>
-        {maxAmount && (
+        {maxAmount ? (
           <Styled.TokenAmountMaxButton onClick={onMaxClick} size="small">
             max
           </Styled.TokenAmountMaxButton>
-        )}
+        ) : undefined}
       </Styled.SecondaryControls>
     </Styled.TokenField>
   );

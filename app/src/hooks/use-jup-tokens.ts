@@ -4,6 +4,7 @@ import { TOKEN_LIST_URL } from "@jup-ag/core";
 import { SplToken } from "@twamm/client.js/lib/spl-token";
 import useBlockchain from "../contexts/solana-connection-context";
 import { NEXT_PUBLIC_SUPPORTED_TOKEN } from "../env";
+import coinResolver from "../utils/coin-resolver";
 
 let ADDRESSES: string[];
 try {
@@ -18,7 +19,13 @@ const swrKey = (params: { moniker: Cluster }) => ({
 });
 
 const isSol = (t: JupToken) => SplToken.isNativeAddress(t.address);
-const hasProperAddress = (t: JupToken) => ADDRESSES.includes(t.address);
+const hasProperAddress = (t: JupToken) => {
+  const addressToSearch = coinResolver(t.address);
+  // convert addresses from env to the mainnet-beta ones
+  // these would be used to search for the coin data
+
+  return ADDRESSES.map((a) => a.trim()).includes(addressToSearch);
+};
 
 const fetcher = async ({ params }: SWRParams<typeof swrKey>) => {
   const { moniker } = params;
