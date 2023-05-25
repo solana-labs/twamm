@@ -1,24 +1,24 @@
+import M from "easy-maybe/lib";
 import type { Cluster } from "@solana/web3.js";
 import useSWR from "swr";
-import { TOKEN_LIST_URL } from "@jup-ag/core";
+import * as twammClient from "@twamm/client.js";
+import { flatten } from "ramda";
 import { SplToken } from "@twamm/client.js/lib/spl-token";
-import useBlockchain from "../contexts/solana-connection-context";
-import { NEXT_PUBLIC_SUPPORTED_TOKEN } from "../env";
+import { TOKEN_LIST_URL } from "@jup-ag/core";
+import coinResolver from "../utils/coin-resolver";
+import useTokenPairs from "./use-token-pairs";
 
-let ADDRESSES: string[];
-try {
-  ADDRESSES = NEXT_PUBLIC_SUPPORTED_TOKEN.split(",");
-} catch (e) {
-  ADDRESSES = ["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"];
-}
+type Unpacked<T> = T extends (infer U)[] ? U : T;
 
-const swrKey = (params: { moniker: Cluster }) => ({
+const swrKey = (params: { moniker: Cluster; addresses: string[] }) => ({
   key: "JupTokens",
   params,
 });
 
 const isSol = (t: JupToken) => SplToken.isNativeAddress(t.address);
-const hasProperAddress = (t: JupToken) => ADDRESSES.includes(t.address);
+
+const resolveAddress = (t: JupToken) => coinResolver(t.address);
+// checking token address against the address present at the program
 
 const fetcher = async ({ params }: SWRParams<typeof swrKey>) => {
   const { moniker } = params;
@@ -26,6 +26,9 @@ const fetcher = async ({ params }: SWRParams<typeof swrKey>) => {
   const allTokens: Array<JupToken> = await (
     await fetch(TOKEN_LIST_URL[moniker])
   ).json();
+
+  const hasProperAddress = (t: JupToken) =>
+    params.addresses.includes(resolveAddress(t));
 
   const neededTokens = allTokens
     .filter((t) => hasProperAddress(t) || isSol(t))
@@ -41,8 +44,38 @@ const fetcher = async ({ params }: SWRParams<typeof swrKey>) => {
 };
 
 export default (_: void, options = {}) => {
-  const { clusters } = useBlockchain();
-  const moniker = clusters[0].moniker as "mainnet-beta";
+  const programPairs = useTokenPairs();
 
-  return useSWR(swrKey({ moniker }), fetcher, options);
+  const addresses = M.withDefault(
+    undefined,
+    M.andMap((tp) => {
+      type TokenPairOrNil = Unpacked<typeof tp>;
+
+      const isTokenPair = (
+        a: TokenPairOrNil
+      ): a is NonNullable<TokenPairOrNil> => a !== null;
+      const pairs = tp.filter(isTokenPair);
+
+      const pairAddresses = flatten(
+        pairs
+          .filter((a) => a.allowDeposits)
+          .map<string[]>((p) => [
+            p.configA.mint.toBase58(),
+            p.configB.mint.toBase58(),
+          ])
+      );
+      return [
+        ...new Set(
+          pairAddresses.concat(twammClient.address.NATIVE_TOKEN_ADDRESS)
+        ),
+      ];
+    }, M.of(programPairs.data))
+    // include wrapped SOL address as there might be no token pair with it
+  );
+
+  return useSWR(
+    addresses && swrKey({ moniker: "mainnet-beta", addresses }),
+    fetcher,
+    options
+  );
 };
