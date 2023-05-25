@@ -113,7 +113,6 @@ Note: UI won't work unless the program is properly deployed and initialized!
       NEXT_PUBLIC_PROGRAM_ADDRESS - address of the deployed twamm program
       NEXT_PUBLIC_CLUSTER_API_URL - link to your RPC node (api.mainnet-beta.com won't work due to restrictions)
       NEXT_PUBLIC_ENABLE_TX_SIMUL - set to 0
-      NEXT_PUBLIC_SUPPORTED_TOKEN - insert a comma-separated list of supported token mints (don't add any spaces!)
       NEXT_PUBLIC_MAIN_TRADE_PAIR - insert a comma-separated list of token pair' mints to exchange by default and an exchange direction after (no spaces)
 
 
@@ -122,7 +121,6 @@ For example:
     NEXT_PUBLIC_PROGRAM_ADDRESS: TWAMdUxafgDN2BJNFaC6pND63tjdLz4AmEKBzuxtbe9
     NEXT_PUBLIC_CLUSTER_API_URL: https://rpc.ankr.com/solana
     NEXT_PUBLIC_ENABLE_TX_SIMUL: 0
-    NEXT_PUBLIC_SUPPORTED_TOKEN: So11111111111111111111111111111111111111112,EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
     NEXT_PUBLIC_MAIN_TRADE_PAIR: So11111111111111111111111111111111111111112,EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v,buy
 
 Click `Deploy`.
