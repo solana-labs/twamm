@@ -51,6 +51,7 @@ export default {
   OrdersColumnsPair: "Token Pair",
   OrdersColumnsQunatity: "Quantity",
   OrdersColumnsTimeFrame: "Time Frame",
+  OrdersCellExpirationActive: "Active",
   OrdersCellExpirationDone: "Done",
   Search: "Search",
   Settings: "Settings",

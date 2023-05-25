@@ -1,27 +1,30 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { address } from "@twamm/client.js";
 import { ErrorBoundary } from "react-error-boundary";
 import { OrderSide } from "@twamm/types/lib";
 import { useCallback, useMemo, useState } from "react";
 
+import AccountOrders from "../organisms/account-orders";
 import ErrorFallback from "../atoms/error-fallback";
 import ModeToggle, { modes } from "../atoms/mode-toggle";
 import styles from "./userspace.module.css";
-import TokenPairs from "../organisms/token-pairs";
-import AccountOrders from "../organisms/account-orders";
 import TokenExchange, { TradeStruct } from "../organisms/token-exchange";
+import TokenPairs from "../organisms/token-pairs";
 import useBreakpoints from "../hooks/use-breakpoints";
+import { NEXT_PUBLIC_MAIN_TRADE_PAIR } from "../env";
+
+const [token1, token2, side] = NEXT_PUBLIC_MAIN_TRADE_PAIR.split(",").map((a) =>
+  a.trim()
+);
 
 const DEFAULT_MODE = modes.get("exchange") as string;
 
 const DEFAULT_TRADE = {
   amount: 0,
-  pair: [
-    address.NATIVE_TOKEN_ADDRESS,
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  ] as AddressPair,
-  type: OrderSide.buy,
+  pair: [token1, token2] as AddressPair,
+  // at thins moment position of token1 and token2 should not reflect the real pair
+  // we use them to figure out what the pair to use
+  type: side === OrderSide.buy ? OrderSide.buy : OrderSide.sell,
 };
 
 export default () => {

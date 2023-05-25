@@ -19,17 +19,19 @@ const withFormattedExpTime = (data: TMaybe<{ pool: TPool }>) => {
   const selectExpTime = view(lensPoolExpiration);
 
   const tif = M.andMap<any, number>(selectTif, data);
+  const status = M.andMap(({ pool }) => pool.status, data);
   const expirationBN = M.andMap<any, BN>(selectExpTime, data);
   const expirationTime = M.andMap((bn) => bn.toNumber(), expirationBN);
-  const expTif = Extra.combine([expirationTime, tif]);
+  const expirationData = Extra.combine3([expirationTime, tif, status]);
 
-  const timeLeft = M.andMap(([a, b]) => {
+  const timeLeft = M.andMap(([a, b, s]) => {
     const left = expirationTimeToInterval(a, b);
 
-    if (!left) return i18n.OrdersCellExpirationDone;
+    if (left === 0 && s?.active) return i18n.OrdersCellExpirationActive;
+    if (!left || s?.locked) return i18n.OrdersCellExpirationDone;
 
     return formatInterval(left);
-  }, expTif);
+  }, expirationData);
 
   return timeLeft;
 };

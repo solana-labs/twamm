@@ -14,7 +14,7 @@ try {
 } catch (e) {
   address = web3.clusterApiUrl(CLUSTER_ADDRESS || "mainnet-beta");
 }
-console.log(address)
+
 const connection = new web3.Connection(
   address,
   "confirmed"

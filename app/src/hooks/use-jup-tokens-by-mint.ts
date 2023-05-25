@@ -1,6 +1,7 @@
 import M, { Extra } from "easy-maybe/lib";
 import useSWR from "swr";
 import { PublicKey } from "@solana/web3.js";
+import coinResolver from "../utils/coin-resolver";
 import useJupTokens from "./use-jup-tokens";
 
 const castKeys = (keys: PublicKey[] | string[]) => keys.map((k) => String(k));
@@ -10,6 +11,8 @@ const swrKey = (params: { mints: PublicKey[] | string[] }) => ({
   params,
 });
 
+const resolveAddress = (token: JupToken) => coinResolver(token.address);
+
 const fetcher =
   (tokens?: JupToken[]) =>
   async ({ params }: SWRParams<typeof swrKey>) => {
@@ -17,13 +20,24 @@ const fetcher =
 
     const mints = castKeys(params.mints);
 
-    const selectedTokens = tokens.filter((token) =>
-      mints.includes(token.address)
-    );
+    // FEAT: consider using the resolving helper once
+
+    const selectedTokens = tokens.filter((token) => {
+      const addressToMatch = resolveAddress(token);
+      // resolve address against the environment
+
+      return mints.includes(addressToMatch);
+    });
 
     const tokenMap = new Map();
     selectedTokens.forEach((token) => {
-      tokenMap.set(token.address, token);
+      const namespacesToken = {
+        ...token,
+        address: resolveAddress(token),
+        // resolve address against the environment
+      };
+
+      tokenMap.set(namespacesToken.address, namespacesToken);
     });
 
     return mints.map((mint) => tokenMap.get(mint));

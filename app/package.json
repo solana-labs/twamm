@@ -1,6 +1,6 @@
 {
   "name": "@twamm/app",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -39,8 +39,8 @@
     "@solana/wallet-adapter-react-ui": "^0.9.16",
     "@solana/wallet-adapter-wallets": "^0.18.7",
     "@solana/web3.js": "1.62.0",
-    "@twamm/client.js": "1.0.0",
-    "@twamm/types": "1.0.0",
+    "@twamm/client.js": "1.1",
+    "@twamm/types": "1.1",
     "a-wait-forit": "0.2.0",
     "bn.js": "5.2.1",
     "easy-maybe": "0.0.7",
