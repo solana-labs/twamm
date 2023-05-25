@@ -13,9 +13,6 @@ export const JUPITER_PRICE_ENDPOINT_V1 = "https://price.jup.ag/v1/price";
 export const NEXT_PUBLIC_ENABLE_TX_SIMUL =
   process.env.NEXT_PUBLIC_ENABLE_TX_SIMUL || "";
 
-export const NEXT_PUBLIC_SUPPORTED_TOKEN =
-  process.env.NEXT_PUBLIC_SUPPORTED_TOKEN || "";
-
 const mainTradePair = process.env.NEXT_PUBLIC_MAIN_TRADE_PAIR;
 if (!mainTradePair) throw new Error("MAIN_TRADE_PAIR is not set");
 export const NEXT_PUBLIC_MAIN_TRADE_PAIR = mainTradePair;
