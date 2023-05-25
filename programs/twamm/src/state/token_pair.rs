@@ -226,8 +226,11 @@ impl TokenPair {
         oracle_token_a: &AccountInfo,
         oracle_token_b: &AccountInfo,
     ) -> Result<OraclePrice> {
-        self.get_token_a_oracle_price(oracle_token_a)?
-            .checked_div(&self.get_token_b_oracle_price(oracle_token_b)?)
+        let pair_price = self
+            .get_token_a_oracle_price(oracle_token_a)?
+            .checked_div(&self.get_token_b_oracle_price(oracle_token_b)?)?;
+        require_gt!(pair_price.price, 0, TwammError::InvalidTokenPairPrice);
+        Ok(pair_price)
     }
 
     pub fn get_token_a_amount(
@@ -538,10 +541,6 @@ impl TokenPair {
             }
         }
 
-        if total_outstanding_a == 0 && total_outstanding_b == 0 {
-            return Ok(res);
-        }
-
         // settle pools internally
         for idx in 0..(pools.len() - 1) {
             if outstanding_a[idx] != 0 || outstanding_b[idx] != 0 {
@@ -604,7 +603,7 @@ impl TokenPair {
             && token_a_change != 0
             && token_b_change != 0
         {
-            // compute total amount of tokens to receive and give up
+            // compute total amount of tokens to receive and return
             let mut pool_amount_out;
             let mut supply_amount_in;
             if res.settlement_side == MatchingSide::Sell {
