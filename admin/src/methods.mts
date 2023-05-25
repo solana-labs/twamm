@@ -164,7 +164,7 @@ export const completeOrders = async (
 
   if (expiredOrders.size === 0) {
     loader.stop();
-    return []
+    return [];
   }
 
   const tokenPairKeys = [...expiredOrders.values()]
@@ -312,7 +312,7 @@ export const deleteTestPool = async (
         custodyTokenA,
         custodyTokenB,
         timeInForce,
-        nextPool
+        new BN(String(nextPool))
       )
     ).pda,
   };
@@ -846,15 +846,17 @@ export const settle = async (
 
   const poolMetas: web3.AccountMeta[] = [];
   for (let i = 0; i <= timeInForceIntervals.length - 1; i++) {
-    let tif = timeInForceIntervals[i];
-    let poolKey = await cli.getPoolKey(
-      client.program,
-      custodyTokenA,
-      custodyTokenB,
-      tif,
-      false
-    );
-    poolMetas.push(poolMeta.fromPublicKey(poolKey.pda));
+    // adding current poolMetas
+    if (pair.currentPoolPresent[i]) {
+      let poolKey = await cli.getPoolKey(
+        client.program,
+        custodyTokenA,
+        custodyTokenB,
+        timeInForceIntervals[i],
+        pair.poolCounters[i]
+      );
+      poolMetas.push(poolMeta.fromPublicKey(poolKey.pda));
+    }
   }
 
   const receiver = signer.publicKey;

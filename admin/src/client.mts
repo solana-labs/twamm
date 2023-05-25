@@ -2,6 +2,7 @@ import * as a from "@project-serum/anchor";
 import * as spl from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import Idl from "@program_types/twamm.ts";
+import BN from "./utils/bn.mts";
 import { encode } from "./utils/index.mts";
 
 type TwammProgram = a.Program<Idl.Twamm>;
@@ -132,13 +133,13 @@ export const poolKey = async (
   tokenACustody: web3.PublicKey,
   tokenBCustody: web3.PublicKey,
   tif: number,
-  counter: number
+  counter: BN
 ) => {
   let tif_buf = Buffer.alloc(4);
   tif_buf.writeUInt32LE(tif, 0);
 
   let counter_buf = Buffer.alloc(8);
-  counter_buf.writeUInt32LE(counter, 0);
+  counter_buf.writeUint32LE(counter.toNumber(), 0);
 
   let [pda, bump] = await web3.PublicKey.findProgramAddress(
     [
@@ -159,11 +160,8 @@ export const getPoolKey = async (
   tokenACustody: web3.PublicKey,
   tokenBCustody: web3.PublicKey,
   tif: number,
-  nextPool: boolean | undefined = false
-) => {
-  const counter = nextPool ? 1 : 0;
-  return poolKey(program, tokenACustody, tokenBCustody, tif, counter);
-};
+  counter: BN
+) => poolKey(program, tokenACustody, tokenBCustody, tif, counter);
 
 export const twamm = async (program: TwammProgram, name = "twamm") => {
   const [pda, bump] = await web3.PublicKey.findProgramAddress(
