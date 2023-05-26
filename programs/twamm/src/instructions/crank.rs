@@ -188,7 +188,7 @@ pub fn crank(ctx: Context<Crank>, params: &CrankParams) -> Result<i64> {
             token_a_change,
             token_pair.config_a.decimals,
         )?);
-        require_gte!(swap_price.price, 0, TwammError::SettlementAmountTooSmall);
+        require_gt!(swap_price.price, 0, TwammError::SettlementAmountTooSmall);
         let swap_price_f64 = swap_price.checked_as_f64()?;
         let oracle_price_f64 = oracle_price.checked_as_f64()?;
         if (supply_side == MatchingSide::Sell && oracle_price_f64 < swap_price_f64)
