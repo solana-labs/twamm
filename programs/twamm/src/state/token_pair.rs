@@ -1762,4 +1762,26 @@ mod test {
             res
         );
     }
+
+    #[test]
+    fn test_get_token_pair_oracle_price() {
+        let oracle_price1 = OraclePrice {
+            price: 4004,
+            exponent: -10,
+        };
+
+        let oracle_price2 = OraclePrice {
+            price: 100001000,
+            exponent: -8,
+        };
+
+        let pair_price = oracle_price1.checked_div(&oracle_price2).unwrap();
+        assert_eq!(
+            pair_price,
+            OraclePrice {
+                price: 40039,
+                exponent: -11
+            }
+        );
+    }
 }

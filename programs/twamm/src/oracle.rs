@@ -5,6 +5,8 @@ use {
     anchor_lang::prelude::*,
 };
 
+const ORACLE_EXPONENT_SCALE: i32 = -9;
+const ORACLE_PRICE_SCALE: u64 = 1_000_000_000;
 const ORACLE_MAX_PRICE: u64 = (1 << 28) - 1;
 
 #[derive(Copy, Clone, AnchorSerialize, AnchorDeserialize, Debug)]
@@ -20,7 +22,7 @@ impl Default for OracleType {
     }
 }
 
-#[derive(Copy, Clone, AnchorSerialize, AnchorDeserialize, Debug)]
+#[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct OraclePrice {
     pub price: u64,
     pub exponent: i32,
@@ -179,16 +181,18 @@ impl OraclePrice {
     }
 
     pub fn checked_div(&self, other: &OraclePrice) -> Result<OraclePrice> {
-        let target_exponent = std::cmp::min(self.exponent, other.exponent);
+        let base = self.normalize()?;
+        let other = other.normalize()?;
+
         Ok(OraclePrice {
-            price: math::checked_decimal_div(
-                self.price,
-                self.exponent,
+            price: math::checked_div(
+                math::checked_mul(base.price, ORACLE_PRICE_SCALE)?,
                 other.price,
-                other.exponent,
-                target_exponent,
             )?,
-            exponent: target_exponent,
+            exponent: math::checked_sub(
+                math::checked_add(base.exponent, ORACLE_EXPONENT_SCALE)?,
+                other.exponent,
+            )?,
         })
     }
 
