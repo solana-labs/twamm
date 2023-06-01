@@ -16,27 +16,44 @@ const resolveAddress = (token: JupToken) => coinResolver(token.address);
 const fetcher =
   (tokens?: JupToken[]) =>
   async ({ params }: SWRParams<typeof swrKey>) => {
-    if (!tokens) return [];
+    if (!tokens) {
+      console.error("Can not fetch the Jupiter tokens"); // eslint-disable-line no-console
+      return [];
+    }
 
     const mints = castKeys(params.mints);
+    const neededTokens = new Map<string, JupToken>();
 
-    // FEAT: consider using the resolving helper once
-
-    const selectedTokens = tokens.filter((token) => {
+    tokens.forEach((token) => {
       const addressToMatch = resolveAddress(token);
       // resolve address against the environment
 
-      return mints.includes(addressToMatch);
+      if (mints.includes(addressToMatch)) {
+        neededTokens.set(addressToMatch, token);
+      }
     });
 
     const tokenMap = new Map();
-    selectedTokens.forEach((token) => {
-      const namespacesToken = {
-        ...token,
-        address: resolveAddress(token),
-        // resolve address against the environment
-      };
 
+    mints.forEach((mint) => {
+      const tokenData = neededTokens.get(mint);
+
+      let namespacesToken;
+      if (tokenData) {
+        namespacesToken = { ...tokenData, address: resolveAddress(tokenData) };
+      } else {
+        // eslint-disable-next-line no-console
+        console.error(
+          "Unknown token found. Please make sure you are using the correct mint"
+        );
+        namespacesToken = {
+          address: mint,
+          symbol: "N/A",
+          decimals: undefined,
+          name: "Unknown Token",
+          logoURI: undefined,
+        };
+      }
       tokenMap.set(namespacesToken.address, namespacesToken);
     });
 

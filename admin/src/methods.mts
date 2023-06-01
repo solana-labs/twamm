@@ -9,13 +9,16 @@ import * as types from "./types.mts";
 import BN from "./utils/bn.mts";
 import Client, * as cli from "./client.mts";
 import loader from "./utils/loader.mts";
-import { prettifyJSON } from "./utils/index.mts";
+import { fetchOrderComplData, getTime, prettifyJSON } from "./utils/index.mts";
 
 const _log = Debug("twamm-admin:methods");
 const log = (msg: any, affix?: string) => {
   const output = affix ? _log.extend(affix) : _log;
   output(prettifyJSON(msg));
 };
+
+const clamp = (input: number, min: number = 60, max: number = 600) =>
+  input <= min ? min : input >= max ? max : input;
 
 type RunOptions = { dryRun?: boolean };
 
@@ -73,7 +76,7 @@ const cancelOrder = async (
   ).address;
 
   const accounts = {
-    payer: owner,
+    payer: signer.publicKey,
     owner: owner,
     userAccountTokenA,
     userAccountTokenB,
@@ -93,7 +96,7 @@ const cancelOrder = async (
     .accounts(accounts)
     .signers([signer]);
 
-  const result = opts.dryRun ? await m.simulate() : await m.rpc();
+  let result = opts.dryRun ? await m.simulate() : await m.rpc();
 
   loader.stop();
   return result;
@@ -101,65 +104,44 @@ const cancelOrder = async (
 
 export const completeOrders = async (
   client: ReturnType<typeof Client>,
-  command: CommandInput<unknown, unknown>,
+  command: CommandInput<{ feature?: "test" }, unknown>,
   signer: web3.Keypair,
   opts: RunOptions
 ) => {
   log(command);
   loader.start("Cancelling orders");
 
-  let all = await client.program.account.order.all();
+  const hasTestFeatureFlag = command.options.feature === "test";
 
-  let orders = new Map<
-    web3.PublicKey,
-    {
-      owner: web3.PublicKey;
-      pool: web3.PublicKey;
-      self: any;
+  const ordersComplete = await fetchOrderComplData(
+    client,
+    hasTestFeatureFlag ? { fetchTokenPairs: true } : undefined
+  );
+
+  const expiredOrders = ordersComplete.mapEntries(([k, v]: [string, any]) => {
+    const hasExpiredStatus = v._pool.status.expired ? true : false;
+    const now = getTime();
+    const hasNoBalance =
+      v._pool.buySide.sourceBalance.toNumber === 0 &&
+      v._pool.sellSide.sourceBalance.toNumber() === 0;
+
+    let isExpired;
+    if (hasTestFeatureFlag) {
+      const poolExpTime = v._pool.expirationTime.toNumber();
+      isExpired =
+        hasExpiredStatus ||
+        hasNoBalance ||
+        v._tokenPair.inceptionTime.toNumber() >
+          poolExpTime + clamp(v._pool.timeInForce / 100);
+    } else {
+      const poolExpTime = v._pool.expirationTime.toNumber();
+      isExpired =
+        hasExpiredStatus ||
+        hasNoBalance ||
+        now > poolExpTime + clamp(v._pool.timeInForce / 100);
     }
-  >([]);
-  let expiredOrders = new Map<
-    web3.PublicKey,
-    {
-      owner: web3.PublicKey;
-      pool: web3.PublicKey;
-      poolData?: any;
-      self: any;
-      tokenPair?: web3.PublicKey;
-      tokenPairData?: any;
-    }
-  >(orders);
 
-  let tokenPairs = new Map<string, any>([]);
-
-  all.forEach((order: any) => {
-    orders.set(order.publicKey, {
-      owner: order.account.owner,
-      pool: order.account.pool,
-      self: order,
-    });
-  });
-
-  let ordersPools = [...new Set(all.map((o: any) => o.account.pool))];
-
-  let pools = await client.program.account.pool.fetchMultiple(ordersPools);
-
-  const ordersKeyValues = [...orders];
-  pools.forEach((pool: any, index: number) => {
-    const poolKey = ordersPools[index];
-    const tokenPairKey = pool.tokenPair;
-    const isExpired = pool.status?.expired ? true : false;
-
-    ordersKeyValues.forEach((kv) => {
-      const isTargetOrder = kv[1].pool === poolKey;
-      if (isTargetOrder && isExpired) {
-        expiredOrders.set(kv[0], {
-          ...kv[1],
-          poolData: pool,
-          tokenPair: tokenPairKey,
-        });
-      }
-    });
+    return isExpired ? [k, v] : undefined;
   });
 
   if (expiredOrders.size === 0) {
@@ -167,41 +149,21 @@ export const completeOrders = async (
     return [];
   }
 
-  const tokenPairKeys = [...expiredOrders.values()]
-    .filter((eo) => eo !== undefined)
-    .map<web3.PublicKey>((eo) => eo.tokenPair as web3.PublicKey);
-
-  const uniqTokenPairKeys = [
-    ...new Set(tokenPairKeys.map((tpk) => tpk.toBase58())),
-  ];
-
-  const tokenPairsData = await client.program.account.tokenPair.fetchMultiple(
-    uniqTokenPairKeys
-  );
-
-  tokenPairsData.forEach((tp: any, index: number) => {
-    tokenPairs.set(uniqTokenPairKeys[index], tp);
-  });
-
   let results = [];
-  const ordersToClose = [...expiredOrders.values()];
-  for (let i = 0; i <= ordersToClose.length - 1; i++) {
-    const currentOrder = ordersToClose[i];
-    const tokenPair = currentOrder.tokenPair as web3.PublicKey;
-
+  for (let [, current] of expiredOrders.entries()) {
     const sig = await cancelOrder(
       client,
       {
         options: {},
         arguments: {
-          owner: currentOrder.owner,
-          tif: currentOrder.poolData?.timeInForce,
+          owner: current.owner,
+          tif: current._pool.timeInForce,
           lpAmount: new BN(Number.MAX_SAFE_INTEGER),
           nextPool: false,
-          tokenPair,
-          tokenPairData: tokenPairs.get(tokenPair.toBase58()),
-          pool: currentOrder.pool,
-          order: currentOrder.self.publicKey,
+          tokenPair: current.tokenPair,
+          tokenPairData: current._tokenPair,
+          pool: current.pool,
+          order: current.self.publicKey,
         },
       },
       signer,
@@ -474,47 +436,13 @@ export const listOrders = async (
 
   const { wallet, tokenPair } = command.options;
 
-  let all = await client.program.account.order.all();
+  const ordersComplete = await fetchOrderComplData(client);
 
-  let orders = new Map<
-    web3.PublicKey,
-    {
-      owner: web3.PublicKey;
-      pool: web3.PublicKey;
-      self: any;
-      tokenPair?: web3.PublicKey;
-    }
-  >([]);
+  let result: any[] = [...ordersComplete.values()].map((v) => v.self);
 
-  all.forEach((order: any) => {
-    orders.set(order.publicKey, {
-      owner: order.account.owner,
-      pool: order.account.pool,
-      self: order,
-    });
-  });
-
-  let ordersPools = [...new Set(all.map((o: any) => o.account.pool))];
-
-  let pools = await client.program.account.pool.fetchMultiple(ordersPools);
-
-  const ordersKeyValues = [...orders];
-  pools.forEach((pool: any, index: number) => {
-    const poolKey = ordersPools[index];
-    const tokenPairKey = pool.tokenPair;
-
-    ordersKeyValues.forEach((kv) => {
-      const isTargetOrder = kv[1].pool === poolKey;
-      if (isTargetOrder) {
-        orders.set(kv[0], { ...kv[1], tokenPair: tokenPairKey });
-      }
-    });
-  });
-
-  let result: any[] = all;
   if (wallet || tokenPair) {
     result = [];
-    [...orders.values()].forEach((orderItem) => {
+    [...ordersComplete.values()].forEach((orderItem) => {
       const hasOwner = wallet && orderItem.owner.equals(wallet);
       const hasTPair =
         tokenPair && (orderItem.tokenPair?.equals(tokenPair) ?? false);

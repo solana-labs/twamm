@@ -37,6 +37,7 @@ let cli = new Command()
     "allow to simulate the commands only",
     (v) => v === "true"
   )
+  .option("-f, --feature <test>", "specify feature flag for testing")
   .version(VERSION);
 
 /**
@@ -66,13 +67,13 @@ cli
   .description("complete fulfilled orders")
   .action(
     handler(async (opts: unknown, ctx: Command) => {
-      const { dryRun, keypair, url } = ctx.optsWithGlobals();
+      const { dryRun, feature, keypair, url } = ctx.optsWithGlobals();
       const client = Client(url);
       const signer = await readSignerKeypair(keypair);
 
       return methods.completeOrders(
         client,
-        { options: {}, arguments: {} },
+        { options: { feature }, arguments: {} },
         signer,
         { dryRun }
       );
@@ -747,7 +748,7 @@ cli
   .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
   .requiredOption(
     "-rk, --receiver-keys <pubkey,..>",
-    "Comma-separated list of receiver' public keys for A, B and SOL respectively; required"
+    "Comma-separated list (one key for all) of receiver public keys for A, B and SOL respectively; required"
   )
   .argument("<u64>", "Amount of token A")
   .argument("<u64>", "Amount of token B")
