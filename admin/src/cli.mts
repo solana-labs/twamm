@@ -699,10 +699,6 @@ cli
   .command("settle")
   .description("settle")
   .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
-  .requiredOption(
-    "-tifs, --time-in-force-intervals <u8,..>",
-    'Time in force list (use "d1,d2,d3" pattern); required'
-  )
   .argument("<sell|buy>", "Supply side")
   .argument("<u64>", "Minimal token amount in")
   .argument("<u64>", "Maximal token amount in")

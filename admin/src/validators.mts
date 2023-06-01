@@ -196,13 +196,29 @@ export const set_oracle_config_opts = (p: { tokenPair: string }) =>
 export const set_oracle_config = (
   params: t.TypeOf<typeof types.OracleConfigParams>
 ) => {
+  const dParamsRaw = types.OracleConfigParams.decode(params)
+
+  if (either.isLeft(dParamsRaw)) {
+    throw new Error("Invalid params");
+  }
+
+  const oracleTypes = ["none", "test", "pyth"];
+  if (
+    !oracleTypes.includes(params.oracleTypeTokenA) ||
+    !oracleTypes.includes(params.oracleTypeTokenB)
+  ) {
+    throw new Error("Invalid oracle type");
+  }
+
+  const setOracleType = (type: string) => ({ [type]: {} });
+
   const dParams = types.SetOracleConfigParams.decode({
     maxOraclePriceErrorTokenA: Number(params.maxOraclePriceErrorTokenA),
     maxOraclePriceErrorTokenB: Number(params.maxOraclePriceErrorTokenB),
     maxOraclePriceAgeSecTokenA: Number(params.maxOraclePriceAgeSecTokenA),
     maxOraclePriceAgeSecTokenB: Number(params.maxOraclePriceAgeSecTokenB),
-    oracleTypeTokenA: JSON.parse(params.oracleTypeTokenA),
-    oracleTypeTokenB: JSON.parse(params.oracleTypeTokenB),
+    oracleTypeTokenA: setOracleType(params.oracleTypeTokenA),
+    oracleTypeTokenB: setOracleType(params.oracleTypeTokenB),
     oracleAccountTokenA: new PublicKey(params.oracleAccountTokenA),
     oracleAccountTokenB: new PublicKey(params.oracleAccountTokenB),
   });
@@ -325,19 +341,9 @@ export const set_time_in_force_opts = (p: { tokenPair: string }) =>
 
 /// Settle
 
-export const settle_opts = (params: {
-  timeInForceIntervals: string;
-  tokenPair: string;
-}) => {
-  const tifs = params.timeInForceIntervals.split(",").map(Number);
-
-  if (tifs.find((a) => isNaN(a)) !== undefined) {
-    throw new Error("Invalid timeInForceIntervals");
-  }
-
+export const settle_opts = (params: { tokenPair: string }) => {
   const dOptions = types.SettleOpts.decode({
     tokenPair: new PublicKey(params.tokenPair),
-    timeInForceIntervals: tifs,
   });
 
   if (either.isLeft(dOptions)) {
@@ -352,15 +358,22 @@ export const settle = (params: t.TypeOf<typeof types.Settle>) => {
     throw new Error("Invalid supply side");
   }
 
+  let supplySide;
+  if (params.supplySide === "sell") {
+    supplySide = { sell: {} };
+  } else if (params.supplySide === "buy") {
+    supplySide = { buy: {} };
+  }
+
   const dParams = types.SettleParams.decode({
-    supplySide: params.supplySide === "sell" ? { sell: {} } : { buy: {} },
+    supplySide,
     maxTokenAmountIn: new BN(params.maxTokenAmountIn),
     minTokenAmountIn: new BN(params.minTokenAmountIn),
     worstExchangeRate: new BN(params.worstExchangeRate),
   });
 
   if (either.isLeft(dParams)) {
-    throw new Error("Invalid WithdrawFees params");
+    throw new Error("Invalid Settle params");
   }
 
   return dParams.right;

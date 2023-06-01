@@ -248,7 +248,6 @@ export const SettleParams = t.type({
 });
 
 export const SettleOpts = t.type({
-  timeInForceIntervals: t.array(t.number),
   tokenPair: PublicKeyType,
 });
 

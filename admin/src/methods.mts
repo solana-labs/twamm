@@ -349,9 +349,34 @@ export const getOutstandingAmount = async (
     oracleTokenB: pair.configB.oracleAccount,
   };
 
-  log(accounts, "get_outstandind_amount");
+  const tokenA = pair.configA.mint;
+  const tokenB = pair.configB.mint;
 
-  const m = client.program.methods.getOutstandingAmount({}).accounts(accounts);
+  const authority = (await cli.transferAuthority(client.program)).pda;
+
+  const custodyTokenA = await cli.tokenCustody(authority, tokenA);
+  const custodyTokenB = await cli.tokenCustody(authority, tokenB);
+
+  const poolMetas: web3.AccountMeta[] = [];
+  for (const [i, tif] of pair.tifs.entries()) {
+    if (pair.currentPoolPresent[i]) {
+      let poolKey = await cli.getPoolKey(
+        client.program,
+        custodyTokenA,
+        custodyTokenB,
+        pair.tifs[i],
+        pair.poolCounters[i]
+      );
+      poolMetas.push(poolMeta.fromPublicKey(poolKey.pda));
+    }
+  }
+
+  log(accounts, "get_outstanding_amount");
+
+  const m = client.program.methods
+    .getOutstandingAmount({})
+    .accounts(accounts)
+    .remainingAccounts(poolMetas);
 
   return opts.dryRun ? m.simulate() : m.rpc();
 };
@@ -842,17 +867,15 @@ export const settle = async (
   const custodyTokenA = await cli.tokenCustody(authority, tokenA);
   const custodyTokenB = await cli.tokenCustody(authority, tokenB);
 
-  const { timeInForceIntervals } = command.options;
-
   const poolMetas: web3.AccountMeta[] = [];
-  for (let i = 0; i <= timeInForceIntervals.length - 1; i++) {
+  for (let i = 0; i <= pair.tifs.length - 1; i++) {
     // adding current poolMetas
     if (pair.currentPoolPresent[i]) {
       let poolKey = await cli.getPoolKey(
         client.program,
         custodyTokenA,
         custodyTokenB,
-        timeInForceIntervals[i],
+        pair.tifs[i],
         pair.poolCounters[i]
       );
       poolMetas.push(poolMeta.fromPublicKey(poolKey.pda));
