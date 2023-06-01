@@ -535,15 +535,24 @@ export const listOrders = async (
 
 export const listPools = async (
   client: ReturnType<typeof Client>,
-  command: CommandInput<unknown, unknown>
+  command: CommandInput<t.TypeOf<typeof types.ListPoolsOpts>, unknown>
 ) => {
   log(command);
   loader.start("Loading pools");
 
+  const { tokenPair } = command.options;
+
   const all = await client.program.account.pool.all();
 
+  let result: any[] = all;
+  if (tokenPair) {
+    result = all.filter((pool: any) =>
+      pool.account.tokenPair.equals(tokenPair)
+    );
+  }
+
   loader.stop();
-  return all;
+  return result;
 };
 
 export const listTokenPairs = async (

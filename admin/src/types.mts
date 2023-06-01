@@ -61,6 +61,14 @@ export const ListOrdersOpts = t.type({
 });
 
 /**
+ * List pools
+ */
+
+export const ListPoolsOpts = t.type({
+  tokenPair: t.union([PublicKeyType, t.undefined]),
+});
+
+/**
  * List token pairs
  */
 

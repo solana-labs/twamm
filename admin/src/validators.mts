@@ -93,6 +93,22 @@ export const list_orders_opts = (params: {
   return dOptions.right;
 };
 
+/// list_pools
+
+export const list_pools_opts = (params: {
+  tokenPair?: string;
+}): t.TypeOf<typeof types.ListPoolsOpts> => {
+  const dOptions = types.ListPoolsOpts.decode({
+    tokenPair: params.tokenPair ? new PublicKey(params.tokenPair) : undefined,
+  });
+
+  if (either.isLeft(dOptions)) {
+    throw new Error("Invalid options");
+  }
+
+  return dOptions.right;
+};
+
 /// list_token_pairs
 
 export const list_token_pairs_opts = (params: {
@@ -196,7 +212,7 @@ export const set_oracle_config_opts = (p: { tokenPair: string }) =>
 export const set_oracle_config = (
   params: t.TypeOf<typeof types.OracleConfigParams>
 ) => {
-  const dParamsRaw = types.OracleConfigParams.decode(params)
+  const dParamsRaw = types.OracleConfigParams.decode(params);
 
   if (either.isLeft(dParamsRaw)) {
     throw new Error("Invalid params");

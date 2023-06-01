@@ -251,7 +251,7 @@ cli
   .command("list-orders")
   .description("list orders")
   .option("-w, --wallet <pubkey>", "Wallet to filter by")
-  .option("-tp, --tokenPair <pubkey>", "Token pair to filter by")
+  .option("-tp, --token-pair <pubkey>", "Token pair to filter by")
   .action(
     handler(
       async (opts: { wallet?: string; tokenPair?: string }, ctx: Command) => {
@@ -266,8 +266,10 @@ cli
 cli
   .command("list-pools")
   .description("list available pools")
+  .option("-tp, --token-pair <pubkey>", "Token pair to filter by")
   .action(
-    handler(async (options: unknown, ctx: Command) => {
+    handler(async (opts: { tokenPair?: string }, ctx: Command) => {
+      const options = validators.list_pools_opts(opts);
       const client = Client(ctx.optsWithGlobals().url);
 
       return methods.listPools(client, { options, arguments: {} });
@@ -458,8 +460,8 @@ cli
   .argument("<f64>", "Maximum price error for token B")
   .argument("<u32>", "Maximum price age (seconds) for token A")
   .argument("<u32>", "Maximum price age (seconds) for token B")
-  .argument("<string>", "Oracle type for token A")
-  .argument("<string>", "Oracle type for token B")
+  .argument("<none|pyth|test>", "Oracle type for token A")
+  .argument("<none|pyth|test>", "Oracle type for token B")
   .action(
     handler(
       async (
