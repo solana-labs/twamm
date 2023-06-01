@@ -410,8 +410,8 @@ cli
   .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
   .argument("<u64>", "Minimal swap amount for token A")
   .argument("<u64>", "Minimal swap amount for token B")
-  .argument("<u64>", "Maximal swap price difference")
-  .argument("<u64>", "Maximal amount of unsettled tokens")
+  .argument("<u64>", "Maximum swap price difference")
+  .argument("<u64>", "Maximum amount of unsettled tokens")
   .argument("<u64>", "Minimal time until expiration")
   .action(
     handler(
@@ -454,10 +454,10 @@ cli
   .command("set-oracle-config")
   .description("set oracle config")
   .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
-  .argument("<f64>", "Maximal price error for token A")
-  .argument("<f64>", "Maximal price error for token B")
-  .argument("<u32>", "Maximal price age (seconds) for token A")
-  .argument("<u32>", "Maximal price age (seconds) for token B")
+  .argument("<f64>", "Maximum price error for token A")
+  .argument("<f64>", "Maximum price error for token B")
+  .argument("<u32>", "Maximum price age (seconds) for token A")
+  .argument("<u32>", "Maximum price age (seconds) for token B")
   .argument("<string>", "Oracle type for token A")
   .argument("<string>", "Oracle type for token B")
   .action(
@@ -701,7 +701,7 @@ cli
   .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
   .argument("<sell|buy>", "Supply side")
   .argument("<u64>", "Minimal token amount in")
-  .argument("<u64>", "Maximal token amount in")
+  .argument("<u64>", "Maximum token amount in")
   .argument("<u64>", "Worst exchange rate")
   .action(
     handler(
