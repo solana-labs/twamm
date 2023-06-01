@@ -165,25 +165,6 @@ pub fn checked_decimal_ceil_div(
     }
 }
 
-pub fn checked_token_div(
-    amount1: u64,
-    decimals1: u8,
-    amount2: u64,
-    decimals2: u8,
-) -> Result<(u64, u8)> {
-    let target_decimals = std::cmp::max(decimals1, decimals2);
-    Ok((
-        checked_decimal_div(
-            amount1,
-            -(decimals1 as i32),
-            amount2,
-            -(decimals2 as i32),
-            -(target_decimals as i32),
-        )?,
-        target_decimals,
-    ))
-}
-
 pub fn checked_mul<T>(arg1: T, arg2: T) -> Result<T>
 where
     T: num_traits::PrimInt + Display,

@@ -182,12 +182,17 @@ pub fn crank(ctx: Context<Crank>, params: &CrankParams) -> Result<i64> {
 
         // verify swap price against oracle
         msg!("Validate swap price");
-        swap_price = OraclePrice::new_from_token(math::checked_token_div(
-            token_b_change,
-            token_pair.config_b.decimals,
-            token_a_change,
-            token_pair.config_a.decimals,
-        )?);
+        swap_price = OraclePrice::new(
+            math::checked_decimal_div(
+                token_b_change,
+                -(token_pair.config_b.decimals as i32),
+                token_a_change,
+                -(token_pair.config_a.decimals as i32),
+                oracle_price.exponent,
+            )?,
+            oracle_price.exponent,
+        );
+        require_gt!(swap_price.price, 0, TwammError::SettlementAmountTooSmall);
         let swap_price_f64 = swap_price.checked_as_f64()?;
         let oracle_price_f64 = oracle_price.checked_as_f64()?;
         if (supply_side == MatchingSide::Sell && oracle_price_f64 < swap_price_f64)

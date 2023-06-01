@@ -14,6 +14,8 @@ pub enum TwammError {
     InvalidTokenPairConfig,
     #[msg("Invalid token amount")]
     InvalidTokenAmount,
+    #[msg("Invalid token pair price")]
+    InvalidTokenPairPrice,
     #[msg("Deposits are not allowed at this time")]
     DepositsNotAllowed,
     #[msg("Withdrawals are not allowed at this time")]
