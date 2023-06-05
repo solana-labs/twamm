@@ -37,7 +37,7 @@ let cli = new Command()
     "allow to simulate the commands only",
     (v) => v === "true"
   )
-  .option("-f, --feature <test>", "specify feature flag for testing")
+  .option("--feature <test>", "specify feature flag for testing")
   .version(VERSION);
 
 /**
@@ -83,7 +83,7 @@ cli
 cli
   .command("delete-test-pair")
   .description("delete test pair")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .requiredOption(
     "-r, --receiver <pubkey>",
     "User address to delete the pair for; required"
@@ -116,9 +116,9 @@ cli
 cli
   .command("delete-test-pool")
   .description("delete test pool")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
-  .requiredOption("-tif, --time-in-force <u8>", "Time in force; required")
-  .requiredOption("-np, --next-pool <bool>", "Next pool; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-t, --time-in-force <u8>", "Time in force; required")
+  .requiredOption("-n, --next-pool <bool>", "Next pool; required")
   .action(
     handler(
       async (
@@ -147,7 +147,7 @@ cli
 cli
   .command("get-outstanding-amount")
   .description("get outstanding amount")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .action(
     handler(
       async (
@@ -252,7 +252,7 @@ cli
   .command("list-orders")
   .description("list orders")
   .option("-w, --wallet <pubkey>", "Wallet to filter by")
-  .option("-tp, --token-pair <pubkey>", "Token pair to filter by")
+  .option("-p, --token-pair <pubkey>", "Token pair to filter by")
   .action(
     handler(
       async (opts: { wallet?: string; tokenPair?: string }, ctx: Command) => {
@@ -267,7 +267,7 @@ cli
 cli
   .command("list-pools")
   .description("list available pools")
-  .option("-tp, --token-pair <pubkey>", "Token pair to filter by")
+  .option("-p, --token-pair <pubkey>", "Token pair to filter by")
   .action(
     handler(async (opts: { tokenPair?: string }, ctx: Command) => {
       const options = validators.list_pools_opts(opts);
@@ -325,7 +325,7 @@ cli
 cli
   .command("set-crank-authority")
   .description("set `crank` authority")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<pubkey>", "Crank authority pubkey")
   .action(
     handler(
@@ -360,7 +360,7 @@ cli
 cli
   .command("set-fees")
   .description("set fees")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<u64>", "Fee numerator")
   .argument("<u64>", "Fee denominator")
   .argument("<u64>", "Settle fee numerator")
@@ -410,7 +410,7 @@ cli
 cli
   .command("set-limits")
   .description("set limits")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<u64>", "Minimal swap amount for token A")
   .argument("<u64>", "Minimal swap amount for token B")
   .argument("<u64>", "Maximum swap price difference")
@@ -456,7 +456,7 @@ cli
 cli
   .command("set-oracle-config")
   .description("set oracle config")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<f64>", "Maximum price error for token A")
   .argument("<f64>", "Maximum price error for token B")
   .argument("<u32>", "Maximum price age (seconds) for token A")
@@ -524,7 +524,7 @@ cli
 cli
   .command("set-permissions")
   .description("set permissions")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<bool>", "Allow deposits")
   .argument("<bool>", "Allow withdrawals")
   .argument("<bool>", "Allow cranks")
@@ -568,7 +568,7 @@ cli
 cli
   .command("set-test-oracle-price")
   .description("set the test oracle price")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<u64>", "Token A price")
   .argument("<u64>", "Token B price")
   .argument(
@@ -623,7 +623,7 @@ cli
 cli
   .command("set-test-time")
   .description("set the test time")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument(
     "<i64>",
     'Time; To use negative value consider using pattern: \\"-d\\"'
@@ -660,7 +660,7 @@ cli
 cli
   .command("set-time-in-force")
   .description("set time in force")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<u8>", "Time in force index")
   .argument("<u32>", "New time in force")
   .action(
@@ -701,7 +701,7 @@ cli
 cli
   .command("settle")
   .description("settle")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .argument("<sell|buy>", "Supply side")
   .argument("<u64>", "Minimal token amount in")
   .argument("<u64>", "Maximum token amount in")
@@ -745,9 +745,9 @@ cli
 cli
   .command("withdraw-fees")
   .description("withdraw fees")
-  .requiredOption("-tp, --token-pair <pubkey>", "Token pair address; required")
+  .requiredOption("-p, --token-pair <pubkey>", "Token pair address; required")
   .requiredOption(
-    "-rk, --receiver-keys <pubkey,..>",
+    "-r, --receiver-keys <pubkey,..>",
     "Comma-separated list (one key for all) of receiver public keys for A, B and SOL respectively; required"
   )
   .argument("<u64>", "Amount of token A")
