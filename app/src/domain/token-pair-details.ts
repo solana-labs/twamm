@@ -7,16 +7,18 @@ import type { PairConfig, PairStats } from "../types/decl.d";
 const calculateVolume = (volumes: BN[] | number[]) => {
   const mark = volumes[0];
 
+  const adjust = (a: number) => a * 1e-6;
+
   if (mark instanceof BN) {
     const a = volumes[0] as BN;
     const b = volumes[1] as BN;
     const volume = a.toNumber() + b.toNumber();
-    return volume / 1e6;
+    return adjust(volume);
   }
   const a = volumes[0] as number;
   const b = volumes[1] as number;
 
-  return a + b;
+  return adjust(a + b);
 };
 
 export const populateStats = (
@@ -56,7 +58,6 @@ export const populateStats = (
   ];
 
   // TODO: number should be deprecated in favor of BN
-
   return {
     a: aMint,
     b: bMint,

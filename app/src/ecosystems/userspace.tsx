@@ -45,7 +45,7 @@ export default () => {
   }, []);
 
   const component = useMemo(() => {
-    if (mode === modes.get("pools")) return <TokenPairs />;
+    if (mode === modes.get("pairs")) return <TokenPairs />;
 
     if (mode === modes.get("orders")) return <AccountOrders />;
 
