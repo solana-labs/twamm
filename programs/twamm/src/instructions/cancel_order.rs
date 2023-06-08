@@ -11,7 +11,10 @@ use {
         },
     },
     anchor_lang::{prelude::*, AccountsClose},
-    anchor_spl::token::{Token, TokenAccount},
+    anchor_spl::{
+        associated_token::get_associated_token_address,
+        token::{Token, TokenAccount},
+    },
 };
 
 #[derive(Accounts)]
@@ -108,8 +111,24 @@ pub fn cancel_order(ctx: Context<CancelOrder>, params: &CancelOrderParams) -> Re
     // and then cancel can be permissionless
     let current_time = token_pair.get_time()?;
     let pool_complete = ctx.accounts.pool.is_complete(current_time)?;
-    if ctx.accounts.owner.key() != ctx.accounts.payer.key() && !pool_complete {
-        return Err(ProgramError::IllegalOwner.into());
+    if ctx.accounts.owner.key() != ctx.accounts.payer.key() {
+        if !pool_complete {
+            return Err(ProgramError::IllegalOwner.into());
+        }
+        require_keys_eq!(
+            get_associated_token_address(
+                &ctx.accounts.owner.key(),
+                &ctx.accounts.custody_token_a.mint,
+            ),
+            ctx.accounts.user_account_token_a.key()
+        );
+        require_keys_eq!(
+            get_associated_token_address(
+                &ctx.accounts.owner.key(),
+                &ctx.accounts.custody_token_b.mint,
+            ),
+            ctx.accounts.user_account_token_b.key()
+        );
     }
 
     let order = ctx.accounts.order.as_mut();
