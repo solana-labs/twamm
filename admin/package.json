@@ -1,0 +1,37 @@
+{
+  "name": "twamm-admin",
+  "version": "1.0.0",
+  "description": "Twamm admin CLI",
+  "main": "cli",
+  "scripts": {
+    "test": "ava --timeout 100000"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "engine": {
+    "node": ">=18.15 || >=20 || >=22",
+    "ts-node": ">=10.9.1"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.3.7",
+    "@solana/web3.js": "^1.75.0",
+    "@types/debug": "^4.1.7",
+    "ava": "^5.2.0",
+    "commander": "^10.0.1",
+    "debug": "^4.3.4",
+    "fp-ts": "^2.15.0",
+    "immutable": "^4.3.0",
+    "io-ts": "^2.2.20",
+    "ora": "^6.3.1",
+    "typescript": "^5.0.4"
+  },
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
+  }
+}
