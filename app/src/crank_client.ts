@@ -200,7 +200,20 @@ export class CrankClient {
     if (!recentBlockhash) {
       return null;
     }
-    const bestRouteAmount = JSBI.toNumber(routes[0].otherAmountThreshold);
+
+    // filter openbook routes
+    let bestRoute;
+
+    for (let i=0; i<routes.length; i++) {
+      if (!routes[i].marketInfos[0].amm.isOpenbook) {
+        bestRoute = routes[i];
+      }
+    }
+    // if no other routes than openbook, skip
+    if (!bestRoute) {
+      return null;
+    }
+    const bestRouteAmount = JSBI.toNumber(bestRoute.otherAmountThreshold);
 
     for (const route of routes) {
       // check for approximate slippage
