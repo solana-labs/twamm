@@ -249,6 +249,7 @@ export class CrankClient {
         if (key.isSigner) {
           if (key.pubkey.toString() !== this.transferAuthority.toString()) {
             this.log("DEBUG: Skipped route with unexpected signer");
+            continue;
           }
           key.isSigner = false;
         }
